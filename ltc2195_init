@@ -1,0 +1,11 @@
+#!/bin/bash
+./adcspi_rw W 1 0x20   -- set 2s complement 
+./adcspi_rw W 2 1      -- set 4 lane
+./reg_rw W 4 3     --5    -- set dco delay
+./reg_rw W 5 1         -- write dco delay
+./reg_rw W 4 28    --28    -- set fco delay
+./reg_rw W 5 2         -- write fco delay
+./reg_rw W 4 5     --5    -- set dco delay
+./reg_rw W 5 4         -- write dco delay
+./reg_rw W 4 28    --28    -- set fco delay
+./reg_rw W 5 8         -- write fco delay

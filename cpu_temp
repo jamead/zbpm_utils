@@ -1,0 +1,2 @@
+#!/bin/bash
+echo "scale=2; ((`cat /sys/bus/platform/drivers/xadc/f8007100.adc/iio\:device0/in_temp0_offset` + `cat /sys/bus/platform/drivers/xadc/f8007100.adc/iio\:device0/in_temp0_raw`) * `cat /sys/bus/platform/drivers/xadc/f8007100.adc/iio\:device0/in_temp0_scale`) / 1000.00"  | bc
