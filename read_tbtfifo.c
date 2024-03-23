@@ -1,4 +1,4 @@
-/*   Read ADC FIFO
+/*   Read TbT FIFO
  *
  */
 
@@ -14,7 +14,7 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-
+#include <math.h>
 
 #define FIFODATAREG 8    //16 
 #define FIFOWDCNTREG 9   //17 
@@ -24,23 +24,18 @@
 
 int main(int argc, char *argv[])
 {
-    int dev;
-    char filename[40], buf[10];
-    int addr = 0b01001000;        // The I2C address of the ADC
+    int fd;
     int i,j;
     float rdback, voltage;
-    int boardNum, channelNum;
     unsigned int fpgaAddr, fpgaData;
     volatile unsigned int *fpgabase;
-    int fd;
-    float elapsedTime, runTime;
-    int fadatabuf[2000000];
+    int databuf[2000000];
     int wordCnt, faEnabled, wordsRead, regVal;
     int num_samples;
     int error=0;
     int samp_cnt = 0;
     int fadiv;
-    float chx, chy;
+    float cha, chb, chc, chd, sum, x, y;
 
     /* Open /dev/mem for writing to FPGA register */
     fd = open("/dev/mem",O_RDWR|O_SYNC);
@@ -77,8 +72,9 @@ int main(int argc, char *argv[])
     while (wordCnt != 0) {
        wordCnt = fpgabase[FIFOWDCNTREG];
        regVal = fpgabase[FIFODATAREG]; 
-       fadatabuf[wordsRead] = regVal;
-        wordsRead++;
+       //printf("%d\n",regVal);
+       databuf[wordsRead] = regVal;
+       wordsRead++;
        }
  
     printf("Run Complete... ");
@@ -87,13 +83,22 @@ int main(int argc, char *argv[])
     printf("Results...\n");
     samp_cnt = 0;
 
-    for (i=3;i<200;i=i+2) {
-	 chx = (float)fadatabuf[i] / 1000.0;
-	 chy = (float)fadatabuf[i+1] / 1000.0;
-         printf("%8.3f\t%8.3f\n",chx,chy);
+    printf("Header: %8x\n",databuf[0]);
+    printf("Time Stamp: %8d %8d\n", databuf[1],databuf[2]);
+
+    for (i=3;i<200;i=i+7) {
+	 cha = databuf[i] / pow(2,28);
+	 chb = databuf[i+1] / pow(2,28);
+	 chc = databuf[i+2] / pow(2,28);
+	 chd = databuf[i+3] / pow(2,28);
+	 sum = databuf[i+4] / pow(2,28);
+	 x = databuf[i+5] / 1000;
+	 y = databuf[i+6] / 1000;
+	 //printf("%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t\n",cha,chb,chc,chd,sum,x,y);
+         printf("%8.3f\t%8.3f\t%8.3f\t%8.3f\t%8.3f\t%8.3f\t%8.3f\n",cha,chb,chc,chd,sum,x,y);
          samp_cnt++;
        }
-    printf("Header: %8x\n",fadatabuf[0]);
-    printf("Time Stamp: %8d %8d\n", fadatabuf[1],fadatabuf[2]);
+ 
+
 
 }
