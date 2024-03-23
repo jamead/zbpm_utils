@@ -14,6 +14,10 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
+#define RF 0
+#define PT 1
+#define PTATTEN_REG 3
+#define RFATTEN_REG 6
 
 
 int main( int argc, char *argv[] )
@@ -21,14 +25,30 @@ int main( int argc, char *argv[] )
     unsigned int fpgaAddr, fpgaData;
     volatile unsigned int *fpgabase;
     int fd;
-    unsigned int regAddr, regVal, command, rdbk;
+    unsigned int regAddr, regVal;
+    int atten;
 
-    if (argc < 2) {
-       printf("Usage: %s value\n",argv[0]);
+    if (argc < 3) {
+       printf("Usage: %s [RF PT] value\n",argv[0]);
        exit(1);
     }
-    
-    regVal  = strtoul(argv[1],NULL,0); //atoi(argv[3]);
+   
+    if (strcmp(argv[1],"PT") == 0) {
+	printf("Setting PT attenuator...\n");
+	atten = PT;
+    }
+    else if (strcmp(argv[1],"RF") == 0) {
+        printf("Setting RF attenuator...\n");
+    	atten = RF;
+    }
+    else {
+	printf("Invalid paramter\n");
+	exit(1);
+    }
+	
+
+
+    regVal  = strtoul(argv[2],NULL,0); //atoi(argv[3]);
     if (regVal > 31) {
        printf("Max Atten = 31dB\n");
        exit(1);
@@ -51,10 +71,12 @@ int main( int argc, char *argv[] )
       printf("Can't mmap\n");
       return 1;
    }
-   printf("val: %x\n",(0x80000000 | regVal));
-   fpgabase[3] = 0x80000000 | regVal;     
-   usleep(1000); 
-   fpgabase[3] = 0; 
+
+   if (atten == RF)
+      fpgabase[RFATTEN_REG] = regVal;     
+   else
+      fpgabase[PTATTEN_REG] = regVal;
+
 
  
    return 0; 
